@@ -50,7 +50,7 @@ class Game
     $question = Cheerio.load ("<span>" + @currentQ.question + "</span>")
     link = $question('a').attr('href')
     text = $question('span').text()
-    resp.send "Answer with !a or !answer\n" +
+    resp.send "Answer with #a or #answer\n" +
               "For #{@currentQ.value} in the category of #{@currentQ.category}:\n" +
               "#{text} " +
               if link then " #{link}" else ""
