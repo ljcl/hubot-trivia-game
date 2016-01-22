@@ -14,12 +14,12 @@
 #   None
 #
 # Commands:
-#   !trivia - ask a question
-#   !skip - skip the current question
-#   !answer <answer> or !a <answer> - provide an answer
-#   !hint or !h - take a hint
-#   !score <player> - check the score of the player
-#   !scores or !score all - check the score of all players
+#   #trivia - ask a question
+#   #skip - skip the current question
+#   #answer <answer> or #a <answer> - provide an answer
+#   #hint or #h - take a hint
+#   #score <player> - check the score of the player
+#   #scores or #score all - check the score of all players
 #
 # Author:
 #   yincrash
@@ -105,8 +105,9 @@ class Game
       scores = ""
       for user in @robot.brain.usersForFuzzyName ""
         user.triviaScore = user.triviaScore or 0
-        scores += "#{user.name} - $#{user.triviaScore}\n"
-        resp.send scores
+        if user.triviaScore > 0
+          scores += "#{user.name} - $#{user.triviaScore}\n"
+      resp.send scores
     else
       user = @robot.brain.userForName name
       unless user
