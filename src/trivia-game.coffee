@@ -74,18 +74,26 @@ class Game
       checkAnswer = @currentQ.validAnswer.toLowerCase().replace /[\\'"\.,-\/#!$%\^&\*;:{}=\-_`~()\s]/g, ""
       checkAnswer = checkAnswer.replace /^(a(n?)|the)/g, ""
       if AnswerChecker(checkGuess, checkAnswer)
-        resp.reply "YOU ARE CORRECT!!1!!!111!! The answer is #{@currentQ.answer}"
+        resp.reply "YOU ARE CORRECT! The answer is #{@currentQ.answer}"
         name = resp.envelope.user.name.toLowerCase().trim()
         value = @currentQ.value.replace /[^0-9.-]+/g, ""
         @robot.logger.debug "#{name} answered correctly."
         user = resp.envelope.user
         user.triviaScore = user.triviaScore or 0
         user.triviaScore += parseInt value if !isNaN(parseInt value)
+		user.triviaAnswers = user.triviaAnswers or 0
+	    user.triviaAnswers += 1
+		user.triviaCorrect = user.triviaCorrect or 0
+		user.triviaCorrect += 1
         resp.reply "Score: #{user.triviaScore}"
         @robot.brain.save()
         @currentQ = null
         @hintLength = null
+		@askQuestion(resp)
       else
+	    user = resp.envelope.user
+	    user.triviaAnswers = user.triviaAnswers or 0
+	    user.triviaAnswers += 1
         resp.send "#{guess} is incorrect."
     else
       resp.send "There is no active question!"
@@ -93,10 +101,16 @@ class Game
   hint: (resp) ->
     if @currentQ
       answer = @currentQ.validAnswer
-      hint = answer.substr(0,@hintLength) + answer.substr(@hintLength,(answer.length + @hintLength)).replace(/./g, ".")
+      hint = answer.substr(0,@hintLength) + answer.substr(@hintLength,(answer.length + @hintLength)).replace(/[ ]/g, "   ").replace(/[^ ]/g, " _ ")
       if @hintLength <= answer.length
         @hintLength += 1
-      resp.send hint
+		if answer.substr(0,@hintLength + 1) == " "
+		  @hintLength += 1
+      resp.send "`" + hint + "`"
+	  user = resp.envelope.user
+	  user.triviaHints = user.triviaHints or 0
+	  user.triviaHints += 1
+	  @robot.brain.save()
     else
       resp.send "There is no active question!"
 
@@ -104,10 +118,13 @@ class Game
     if name == "all"
       scores = ""
       userList = @robot.brain.usersForFuzzyName ""
-      userList.sort((a, b){return (b.triviaScore or 0) - (a.triviaScore or 0)})
+      userList.sort((a, b) -> (b.triviaScore or 0) - (a.triviaScore or 0))
       for user in userList
         user.triviaScore = user.triviaScore or 0
-        scores += "#{user.name} - $#{user.triviaScore}\n" if user.triviaScore > 0
+		user.triviaAnswers = user.triviaAnswers or 0
+		user.triviaCorrect = user.triviaCorrect or 0
+		correctPercentage = (user.triviaCorrect / user.triviaAnswers * 100).toFixed(2) if user.triviaAnswers > 0
+        scores += "#{user.name} - $#{user.triviaScore} (#{user.triviaAnswers} Guesses, #{user.triviaCorrect} Correct, #{correctPercentage}%)\n" if user.triviaScore > 0
       resp.send scores
     else
       user = @robot.brain.userForName name
