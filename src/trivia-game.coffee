@@ -74,7 +74,7 @@ class Game
       checkAnswer = @currentQ.validAnswer.toLowerCase().replace /[\\'"\.,-\/#!$%\^&\*;:{}=\-_`~()\s]/g, ""
       checkAnswer = checkAnswer.replace /^(a(n?)|the)/g, ""
       if AnswerChecker(checkGuess, checkAnswer)
-        resp.reply "YOU ARE CORRECT!!1!!!111!! The answer is #{@currentQ.answer}"
+        resp.reply "YOU ARE CORRECT! The answer is #{@currentQ.answer}"
         name = resp.envelope.user.name.toLowerCase().trim()
         value = @currentQ.value.replace /[^0-9.-]+/g, ""
         @robot.logger.debug "#{name} answered correctly."
@@ -85,6 +85,7 @@ class Game
         @robot.brain.save()
         @currentQ = null
         @hintLength = null
+		@askQuestion(resp)
       else
         resp.send "#{guess} is incorrect."
     else
@@ -93,10 +94,12 @@ class Game
   hint: (resp) ->
     if @currentQ
       answer = @currentQ.validAnswer
-      hint = answer.substr(0,@hintLength) + answer.substr(@hintLength,(answer.length + @hintLength)).replace(/./g, ".")
+      hint = answer.substr(0,@hintLength) + answer.substr(@hintLength,(answer.length + @hintLength)).replace(/[ ]/g, "   ").replace(/[^ ]/g, " _ ")
       if @hintLength <= answer.length
         @hintLength += 1
-      resp.send hint
+		if answer.substr(0,@hintLength + 1) == " "
+			@hintLength += 1
+      resp.send "`" + hint + "`"
     else
       resp.send "There is no active question!"
 
@@ -104,7 +107,7 @@ class Game
     if name == "all"
       scores = ""
       userList = @robot.brain.usersForFuzzyName ""
-      userList.sort((a, b){return (b.triviaScore or 0) - (a.triviaScore or 0)})
+      userList.sort((a, b) -> (b.triviaScore or 0) - (a.triviaScore or 0))
       for user in userList
         user.triviaScore = user.triviaScore or 0
         scores += "#{user.name} - $#{user.triviaScore}\n" if user.triviaScore > 0
