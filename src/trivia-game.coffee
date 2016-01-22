@@ -81,15 +81,15 @@ class Game
         user = resp.envelope.user
         user.triviaScore = user.triviaScore or 0
         user.triviaScore += parseInt value if !isNaN(parseInt value)
-	user.triviaAnswers = user.triviaAnswers or 0
-	user.triviaAnswers += 1
-	user.triviaCorrect = user.triviaCorrect or 0
-	user.triviaCorrect += 1
+        user.triviaAnswers = user.triviaAnswers or 0
+        user.triviaAnswers += 1
+        user.triviaCorrect = user.triviaCorrect or 0
+        user.triviaCorrect += 1
         resp.reply "Score: #{user.triviaScore}"
         @robot.brain.save()
         @currentQ = null
         @hintLength = null
-	@askQuestion(resp)
+        @askQuestion(resp)
       else
 	user = resp.envelope.user
 	user.triviaAnswers = user.triviaAnswers or 0
@@ -104,8 +104,8 @@ class Game
       hint = answer.substr(0,@hintLength) + answer.substr(@hintLength,(answer.length + @hintLength)).replace(/[ ]/g, "   ").replace(/[^ ]/g, " _ ")
       if @hintLength <= answer.length
         @hintLength += 1
-	if answer.substr(0,@hintLength + 1) == " "
-	  @hintLength += 1
+        if answer.substr(0,@hintLength + 1) == " "
+          @hintLength += 1
       resp.send "`" + hint + "`"
       user = resp.envelope.user
       user.triviaHints = user.triviaHints or 0
@@ -121,9 +121,9 @@ class Game
       userList.sort((a, b) -> (b.triviaScore or 0) - (a.triviaScore or 0))
       for user in userList
         user.triviaScore = user.triviaScore or 0
-	user.triviaAnswers = user.triviaAnswers or 0
-	user.triviaCorrect = user.triviaCorrect or 0
-	correctPercentage = (user.triviaCorrect / user.triviaAnswers * 100).toFixed(2) if user.triviaAnswers > 0
+        user.triviaAnswers = user.triviaAnswers or 0
+        user.triviaCorrect = user.triviaCorrect or 0
+        correctPercentage = (user.triviaCorrect / user.triviaAnswers * 100).toFixed(2) if user.triviaAnswers > 0
         scores += "#{user.name} - $#{user.triviaScore} (#{user.triviaAnswers} Guesses, #{user.triviaCorrect} Correct, #{correctPercentage}%)\n" if user.triviaScore > 0
       resp.send scores
     else
