@@ -91,9 +91,9 @@ class Game
         @hintLength = null
         @askQuestion(resp)
       else
-	user = resp.envelope.user
-	user.triviaAnswers = user.triviaAnswers or 0
-	user.triviaAnswers += 1
+        user = resp.envelope.user
+        user.triviaAnswers = user.triviaAnswers or 0
+        user.triviaAnswers += 1
         resp.send "#{guess} is incorrect."
     else
       resp.send "There is no active question!"
