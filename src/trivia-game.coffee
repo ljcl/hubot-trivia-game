@@ -118,20 +118,20 @@ class Game
 
 module.exports = (robot) ->
   game = new Game(robot)
-  robot.hear /^!trivia/, (resp) ->
+  robot.hear /^#t(rivia)?/, (resp) ->
     game.askQuestion(resp)
 
-  robot.hear /^!skip/, (resp) ->
+  robot.hear /^#skip/, (resp) ->
     game.skipQuestion(resp)
 
-  robot.hear /^!a(nswer)? (.*)/, (resp) ->
+  robot.hear /^#a(nswer)? (.*)/, (resp) ->
     game.answerQuestion(resp, resp.match[2])
 
-  robot.hear /^!score (.*)/i, (resp) ->
+  robot.hear /^#score (.*)/i, (resp) ->
     game.checkScore(resp, resp.match[1].toLowerCase().trim())
 
-  robot.hear /^!scores/i, (resp) ->
+  robot.hear /^#scores/i, (resp) ->
     game.checkScore(resp, "all")
 
-  robot.hear /^!h(int)?/, (resp) ->
+  robot.hear /^#h(int)?/, (resp) ->
     game.hint(resp)
