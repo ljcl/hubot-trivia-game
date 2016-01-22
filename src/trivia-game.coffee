@@ -52,7 +52,7 @@ class Game
     text = $question('span').text()
     resp.send "Answer with #a\n" +
               "For _#{@currentQ.value}_ in the category of *#{@currentQ.category}*:\n" +
-              ":question: #{text} " +
+              ":question: *#{text}*" +
               if link then " #{link}" else ""
 
   skipQuestion: (resp) ->
@@ -74,7 +74,7 @@ class Game
       checkAnswer = @currentQ.validAnswer.toLowerCase().replace /[\\'"\.,-\/#!$%\^&\*;:{}=\-_`~()\s]/g, ""
       checkAnswer = checkAnswer.replace /^(a(n?)|the)/g, ""
       if AnswerChecker(checkGuess, checkAnswer)
-        resp.reply ":white_check_mark: YOU ARE CORRECT! The answer is #{@currentQ.answer}"
+        resp.reply ":tendies: YOU ARE CORRECT! The answer is #{@currentQ.answer}"
         name = resp.envelope.user.name.toLowerCase().trim()
         value = @currentQ.value.replace /[^0-9.-]+/g, ""
         @robot.logger.debug "#{name} answered correctly."
