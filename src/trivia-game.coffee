@@ -50,19 +50,19 @@ class Game
     $question = Cheerio.load ("<span>" + @currentQ.question + "</span>")
     link = $question('a').attr('href')
     text = $question('span').text()
-    resp.send "Answer with #a or #answer\n" +
-              "For #{@currentQ.value} in the category of #{@currentQ.category}:\n" +
-              "#{text} " +
+    resp.send "Answer with #a\n" +
+              "For _#{@currentQ.value}_ in the category of *#{@currentQ.category}*:\n" +
+              ":question: #{text} " +
               if link then " #{link}" else ""
 
   skipQuestion: (resp) ->
     if @currentQ
-      resp.send "The answer is #{@currentQ.answer}."
+      resp.send ":grimace: The answer is #{@currentQ.answer}."
       @currentQ = null
       @hintLength = null
       @askQuestion(resp)
     else
-      resp.send "There is no active question!"
+      resp.send ":grimace: There is no active question!"
 
   answerQuestion: (resp, guess) ->
     if @currentQ
@@ -74,7 +74,7 @@ class Game
       checkAnswer = @currentQ.validAnswer.toLowerCase().replace /[\\'"\.,-\/#!$%\^&\*;:{}=\-_`~()\s]/g, ""
       checkAnswer = checkAnswer.replace /^(a(n?)|the)/g, ""
       if AnswerChecker(checkGuess, checkAnswer)
-        resp.reply "YOU ARE CORRECT! The answer is #{@currentQ.answer}"
+        resp.reply ":white_check_mark: YOU ARE CORRECT! The answer is #{@currentQ.answer}"
         name = resp.envelope.user.name.toLowerCase().trim()
         value = @currentQ.value.replace /[^0-9.-]+/g, ""
         @robot.logger.debug "#{name} answered correctly."
