@@ -80,7 +80,7 @@ class Game
         @robot.logger.debug "#{name} answered correctly."
         user = resp.envelope.user
         user.triviaScore = user.triviaScore or 0
-        user.triviaScore += parseInt value
+        user.triviaScore += parseInt value if !isNaN(parseInt value)
         resp.reply "Score: #{user.triviaScore}"
         @robot.brain.save()
         @currentQ = null
@@ -103,10 +103,11 @@ class Game
   checkScore: (resp, name) ->
     if name == "all"
       scores = ""
-      for user in @robot.brain.usersForFuzzyName ""
+      userList = @robot.brain.usersForFuzzyName ""
+      userList.sort((a, b){return (b.triviaScore or 0) - (a.triviaScore or 0)})
+      for user in userList
         user.triviaScore = user.triviaScore or 0
-        if user.triviaScore > 0
-          scores += "#{user.name} - $#{user.triviaScore}\n"
+        scores += "#{user.name} - $#{user.triviaScore}\n" if user.triviaScore > 0
       resp.send scores
     else
       user = @robot.brain.userForName name
