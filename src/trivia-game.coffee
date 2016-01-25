@@ -46,7 +46,7 @@ class Game
       @robot.logger.debug "Answer is #{@currentQ.answer}"
       # remove optional portions of answer that are in parentheses
       @currentQ.validAnswer = @currentQ.answer.replace /\(.*\)/, ""
-	    @currentQ.value = 100 if !isNaN(parseInt @currentQ.value)
+      @currentQ.value = 100 if !isNaN(parseInt @currentQ.value)
 
     $question = Cheerio.load ("<span>" + @currentQ.question + "</span>")
     link = $question('a').attr('href')
@@ -102,11 +102,11 @@ class Game
   hint: (resp) ->
     if @currentQ
       answer = @currentQ.validAnswer
-	    @hintLength = 4 if @hintLength < 4 and answer.substr(0,4).toLowerCase() == "the "
-	    @hintLength = 2 if @hintLength < 2 and answer.substr(0,2).toLowerCase() == "a "
-	    @hintLength += 1 while [" ", "(", ")", ".", '"'].indexOf(answer.charAt(@hintLength - 1)) != -1
-	    hiddenPart = answer.substr(@hintLength).replace(/[ ]/g, "   ").replace(/\(/g, " ( ").replace(/\)/g, " ) ").replace(/\./g, " . ").replace(/[^ .)(]/g, " _ ")
-	    hint = answer.substr(0,@hintLength).split('').join(' ') + hiddenPart
+      @hintLength = 4 if @hintLength < 4 and answer.substr(0,4).toLowerCase() == "the "
+      @hintLength = 2 if @hintLength < 2 and answer.substr(0,2).toLowerCase() == "a "
+      @hintLength += 1 while [" ", "(", ")", ".", '"'].indexOf(answer.charAt(@hintLength - 1)) != -1
+      hiddenPart = answer.substr(@hintLength).replace(/[ ]/g, "   ").replace(/\(/g, " ( ").replace(/\)/g, " ) ").replace(/\./g, " . ").replace(/[^ .)(]/g, " _ ")
+      hint = answer.substr(0,@hintLength).split('').join(' ') + hiddenPart
       resp.send "`" + hint + "`"
       user = resp.envelope.user
       @hintLength += 1 if @hintLength <= answer.length
