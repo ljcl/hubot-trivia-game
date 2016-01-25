@@ -44,13 +44,14 @@ class Game
       @currentQ = @questions[index]
       @hintLength = 1
       @robot.logger.debug "Answer is #{@currentQ.answer}"
-      # remove optional portions of answer that are in parens
+      # remove optional portions of answer that are in parentheses
       @currentQ.validAnswer = @currentQ.answer.replace /\(.*\)/, ""
+      @currentQ.value = 100 if !isNaN(parseInt @currentQ.value)
 
     $question = Cheerio.load ("<span>" + @currentQ.question + "</span>")
     link = $question('a').attr('href')
     text = $question('span').text()
-    resp.send "Answer with #a\n" +
+    resp.send "Answer with #a [your guess]\n" +
               "For _#{@currentQ.value}_ in the category of *#{@currentQ.category}*:\n" +
               ":question: *#{text}*" +
               if link then " #{link}" else ""
@@ -85,7 +86,7 @@ class Game
         user.triviaAnswers += 1
         user.triviaCorrect = user.triviaCorrect or 0
         user.triviaCorrect += 1
-        resp.reply "Score: #{user.triviaScore}"
+        resp.reply "Score: $#{user.triviaScore}\n"
         @robot.brain.save()
         @currentQ = null
         @hintLength = null
@@ -101,13 +102,14 @@ class Game
   hint: (resp) ->
     if @currentQ
       answer = @currentQ.validAnswer
-      hint = answer.substr(0,@hintLength) + answer.substr(@hintLength,(answer.length + @hintLength)).replace(/[ ]/g, "   ").replace(/[^ ]/g, " _ ")
-      if @hintLength <= answer.length
-        @hintLength += 1
-        if answer.substr(0,@hintLength + 1) == " "
-          @hintLength += 1
+      @hintLength = 4 if @hintLength < 4 and answer.substr(0,4).toLowerCase() == "the "
+      @hintLength = 2 if @hintLength < 2 and answer.substr(0,2).toLowerCase() == "a "
+      @hintLength += 1 while [" ", "(", ")", ".", '"'].indexOf(answer.charAt(@hintLength - 1)) != -1
+      hiddenPart = answer.substr(@hintLength).replace(/[ ]/g, "   ").replace(/\(/g, " ( ").replace(/\)/g, " ) ").replace(/\./g, " . ").replace(/[^ .)(]/g, " _ ")
+      hint = answer.substr(0,@hintLength).split('').join(' ') + hiddenPart
       resp.send "`" + hint + "`"
       user = resp.envelope.user
+      @hintLength += 1 if @hintLength <= answer.length
       user.triviaHints = user.triviaHints or 0
       user.triviaHints += 1
       @robot.brain.save()
@@ -123,8 +125,9 @@ class Game
         user.triviaScore = user.triviaScore or 0
         user.triviaAnswers = user.triviaAnswers or 0
         user.triviaCorrect = user.triviaCorrect or 0
+        user.triviaHints = user.triviaHints or 0
         correctPercentage = (user.triviaCorrect / user.triviaAnswers * 100).toFixed(2) if user.triviaAnswers > 0
-        scores += "#{user.name} - $#{user.triviaScore} (#{user.triviaAnswers} Guesses, #{user.triviaCorrect} Correct, #{correctPercentage}%)\n" if user.triviaScore > 0
+        scores += "#{user.name} - $#{user.triviaScore} (#{user.triviaHints} Hints, #{user.triviaAnswers} Guesses, #{user.triviaCorrect} Correct, #{correctPercentage}%)\n" if user.triviaScore > 0
       resp.send scores
     else
       user = @robot.brain.userForName name
