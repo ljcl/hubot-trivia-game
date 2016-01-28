@@ -94,7 +94,7 @@ class Game
         @lastAnswer = checkAnswer
         @askQuestion(resp)
       else if @lastAnswer and AnswerChecker(checkGuess, @lastAnswer)
-        resp.send "#{guess} is the answer for the previous question, you jabroni."
+        resp.send ":snack-vegetable-stalk: #{guess} is the answer for the previous question, jabroni."
       else
         user = resp.envelope.user
         user.triviaAnswers = user.triviaAnswers or 0
