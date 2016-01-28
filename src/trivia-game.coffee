@@ -32,6 +32,7 @@ AnswerChecker = require './answer-checker'
 class Game
   @currentQ = null
   @hintLength = null
+  @lastAnswer = null
 
   constructor: (@robot) ->
     buffer = Fs.readFileSync(Path.resolve('./res', 'questions.json'))
@@ -46,7 +47,7 @@ class Game
       @robot.logger.debug "Answer is #{@currentQ.answer}"
       # remove optional portions of answer that are in parentheses
       @currentQ.validAnswer = @currentQ.answer.replace /\(.*\)/, ""
-      @currentQ.value = 100 if !isNaN(parseInt @currentQ.value)
+      @currentQ.value = 300 if isNaN(parseInt @currentQ.value) or parseInt @currentQ.value == 0
 
     $question = Cheerio.load ("<span>" + @currentQ.question + "</span>")
     link = $question('a').attr('href')
@@ -69,7 +70,7 @@ class Game
     if @currentQ
       checkGuess = guess.toLowerCase()
       # remove html entities (slack's adapter sends & as &amp; now)
-      checkGuess = checkGuess.replace /&.{0,}?;/, ""
+      checkGuess = checkGuess.replace(/&.{0,}?;/, "").replace(/^(a(n?)|the)/g)
       # remove all punctuation and spaces, and see if the answer is in the guess.
       checkGuess = checkGuess.replace /[\\'"\.,-\/#!$%\^&\*;:{}=\-_`~()\s]/g, ""
       checkAnswer = @currentQ.validAnswer.toLowerCase().replace /[\\'"\.,-\/#!$%\^&\*;:{}=\-_`~()\s]/g, ""
@@ -90,7 +91,10 @@ class Game
         @robot.brain.save()
         @currentQ = null
         @hintLength = null
+        @lastAnswer = checkAnswer
         @askQuestion(resp)
+      else if @lastAnswer and AnswerChecker(checkGuess, @lastAnswer)
+        resp.send "#{guess} is the answer for the previous question, you jabroni."
       else
         user = resp.envelope.user
         user.triviaAnswers = user.triviaAnswers or 0
@@ -104,8 +108,8 @@ class Game
       answer = @currentQ.validAnswer
       @hintLength = 4 if @hintLength < 4 and answer.substr(0,4).toLowerCase() == "the "
       @hintLength = 2 if @hintLength < 2 and answer.substr(0,2).toLowerCase() == "a "
-      @hintLength += 1 while [" ", "(", ")", ".", '"'].indexOf(answer.charAt(@hintLength - 1)) != -1
-      hiddenPart = answer.substr(@hintLength).replace(/[ ]/g, "   ").replace(/\(/g, " ( ").replace(/\)/g, " ) ").replace(/\./g, " . ").replace(/[^ .)(]/g, " _ ")
+      @hintLength += 1 while [" ", "(", ")", ".", '"', "/"].indexOf(answer.charAt(@hintLength - 1)) != -1
+      hiddenPart = answer.substr(@hintLength).replace(/[ ]/g, "   ").replace(/\//g, " / ").replace(/\(/g, " ( ").replace(/\)/g, " ) ").replace(/\./g, " . ").replace(/[^ .)(\/]/g, " _ ")
       hint = answer.substr(0,@hintLength).split('').join(' ') + hiddenPart
       resp.send "`" + hint + "`"
       user = resp.envelope.user
@@ -125,9 +129,8 @@ class Game
         user.triviaScore = user.triviaScore or 0
         user.triviaAnswers = user.triviaAnswers or 0
         user.triviaCorrect = user.triviaCorrect or 0
-        user.triviaHints = user.triviaHints or 0
         correctPercentage = (user.triviaCorrect / user.triviaAnswers * 100).toFixed(2) if user.triviaAnswers > 0
-        scores += "#{user.name} - $#{user.triviaScore} (#{user.triviaHints} Hints, #{user.triviaAnswers} Guesses, #{user.triviaCorrect} Correct, #{correctPercentage}%)\n" if user.triviaScore > 0
+        scores += "#{user.name} - $#{user.triviaScore} (#{user.triviaAnswers} Guesses, #{user.triviaCorrect} Correct, #{correctPercentage}%)\n" if user.triviaScore > 0
       resp.send scores
     else
       user = @robot.brain.userForName name
@@ -135,7 +138,11 @@ class Game
         resp.send "There is no score for #{name}"
       else
         user.triviaScore = user.triviaScore or 0
-        resp.send "#{user.name} - $#{user.triviaScore}"
+        user.triviaAnswers = user.triviaAnswers or 0
+        user.triviaCorrect = user.triviaCorrect or 0
+        user.triviaHints = user.triviaHints or 0
+        correctPercentage = (user.triviaCorrect / user.triviaAnswers * 100).toFixed(2) if user.triviaAnswers > 0
+        resp.send "#{user.name} - $#{user.triviaScore} (#{user.triviaHints} Hints, #{user.triviaAnswers} Guesses, #{user.triviaCorrect} Correct, #{correctPercentage}%)\n" if user.triviaScore > 0
 
 
 module.exports = (robot) ->
@@ -157,3 +164,4 @@ module.exports = (robot) ->
 
   robot.hear /^#h(int)?/, (resp) ->
     game.hint(resp)
+  
