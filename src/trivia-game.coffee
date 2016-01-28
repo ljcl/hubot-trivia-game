@@ -47,7 +47,7 @@ class Game
       @robot.logger.debug "Answer is #{@currentQ.answer}"
       # remove optional portions of answer that are in parentheses
       @currentQ.validAnswer = @currentQ.answer.replace /\(.*\)/, ""
-      @currentQ.value = 300 if isNaN(parseInt @currentQ.value) or parseInt @currentQ.value == 0
+      @currentQ.value = "$300" if isNaN(parseInt @currentQ.value.replace(/[^0-9.-]+/g, ""))
 
     $question = Cheerio.load ("<span>" + @currentQ.question + "</span>")
     link = $question('a').attr('href')
@@ -70,7 +70,7 @@ class Game
     if @currentQ
       checkGuess = guess.toLowerCase()
       # remove html entities (slack's adapter sends & as &amp; now)
-      checkGuess = checkGuess.replace(/&.{0,}?;/, "").replace(/^(a(n?)|the)/g)
+      checkGuess = checkGuess.replace /&.{0,}?;/, ""
       # remove all punctuation and spaces, and see if the answer is in the guess.
       checkGuess = checkGuess.replace /[\\'"\.,-\/#!$%\^&\*;:{}=\-_`~()\s]/g, ""
       checkAnswer = @currentQ.validAnswer.toLowerCase().replace /[\\'"\.,-\/#!$%\^&\*;:{}=\-_`~()\s]/g, ""
@@ -109,7 +109,7 @@ class Game
       @hintLength = 4 if @hintLength < 4 and answer.substr(0,4).toLowerCase() == "the "
       @hintLength = 2 if @hintLength < 2 and answer.substr(0,2).toLowerCase() == "a "
       @hintLength += 1 while [" ", "(", ")", ".", '"', "/"].indexOf(answer.charAt(@hintLength - 1)) != -1
-      hiddenPart = answer.substr(@hintLength).replace(/[ ]/g, "   ").replace(/\//g, " / ").replace(/\(/g, " ( ").replace(/\)/g, " ) ").replace(/\./g, " . ").replace(/[^ .)(\/]/g, " _ ")
+      hiddenPart = answer.substr(@hintLength).replace(/[ ]/g, "   ").replace(/\"/g, " \" ").replace(/\//g, " / ").replace(/\(/g, " ( ").replace(/\)/g, " ) ").replace(/\./g, " . ").replace(/[^ .)(\/\"]/g, " _ ")
       hint = answer.substr(0,@hintLength).split('').join(' ') + hiddenPart
       resp.send "`" + hint + "`"
       user = resp.envelope.user
@@ -164,4 +164,3 @@ module.exports = (robot) ->
 
   robot.hear /^#h(int)?/, (resp) ->
     game.hint(resp)
-  
