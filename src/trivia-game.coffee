@@ -47,7 +47,7 @@ class Game
       @robot.logger.debug "Answer is #{@currentQ.answer}"
       # remove optional portions of answer that are in parentheses
       @currentQ.validAnswer = @currentQ.answer.replace /\(.*\)/, ""
-      @currentQ.value = 100 if isNaN(parseInt @currentQ.value)
+      @currentQ.value = 300 if isNaN(parseInt @currentQ.value) or parseInt @currentQ.value == 0
 
     $question = Cheerio.load ("<span>" + @currentQ.question + "</span>")
     link = $question('a').attr('href')
@@ -70,7 +70,7 @@ class Game
     if @currentQ
       checkGuess = guess.toLowerCase()
       # remove html entities (slack's adapter sends & as &amp; now)
-      checkGuess = checkGuess.replace /&.{0,}?;/, ""
+      checkGuess = checkGuess.replace(/&.{0,}?;/, "").replace(/^(a(n?)|the)/g)
       # remove all punctuation and spaces, and see if the answer is in the guess.
       checkGuess = checkGuess.replace /[\\'"\.,-\/#!$%\^&\*;:{}=\-_`~()\s]/g, ""
       checkAnswer = @currentQ.validAnswer.toLowerCase().replace /[\\'"\.,-\/#!$%\^&\*;:{}=\-_`~()\s]/g, ""
